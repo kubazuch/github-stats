@@ -144,6 +144,12 @@ and retrieve the images.
        the CLI](#list-languages), or in the [list used by GitHub
        linguist](https://github.com/github-linguist/linguist/blob/537297cdae3ab05f8d5dd1c03627a5bd73707b19/lib/linguist/languages.yml)
        (which powers their language analysis on the back end).
+   - To only count repositories from certain organizations (plus your own),
+     add them (separated by commas or newlines) to a repository variable
+     called `INCLUDE_ORGS`. Repositories can also be excluded with a
+     repository variable called `EXCLUDE_REPOS`, which is combined with the
+     secret of the same name. Variables are on the same "Secrets and
+     variables" page, under the "Variables" tab.
    - Lists for `EXCLUDE_REPOS` and `EXCLUDE_LANGS` can use globbing patterns.
      For example, to exclude all repos by user "jstrieb", add `jstrieb/*` to
      `EXCLUDE_REPOS`.

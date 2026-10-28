@@ -43,6 +43,7 @@ const Args = struct {
     debug: bool = false,
     verbose: bool = false,
     exclude_repos: ?[]const u8 = null,
+    include_orgs: ?[]const u8 = null,
     exclude_langs: ?[]const u8 = null,
     exclude_private: bool = false,
     overview_output_file: ?[]const u8 = null,
@@ -207,6 +208,12 @@ pub fn main(init: std.process.Init) !void {
         else
             null;
     defer if (exclude_repos) |exclude| allocator.free(exclude);
+    const include_orgs =
+        if (args.include_orgs) |include|
+            try splitList(allocator, include, " ,\t\r\n|\"'\x00")
+        else
+            null;
+    defer if (include_orgs) |include| allocator.free(include);
     const exclude_langs =
         if (args.exclude_langs) |exclude|
             try splitList(allocator, exclude, ",\t\r\n|\"'\x00")
@@ -270,6 +277,7 @@ pub fn main(init: std.process.Init) !void {
     defer aggregate_stats.language_colors.deinit(allocator);
     for (stats.repositories) |repository| {
         if (glob.matchAny(exclude_repos orelse &.{}, repository.name) or
+            !isOwnerIncluded(include_orgs, stats.user, repository.name) or
             (args.exclude_private and repository.private))
         {
             continue;
@@ -373,6 +381,33 @@ fn writeFile(
     var writer = out.writer(io, &write_buffer);
     try writer.interface.writeAll(data);
     try writer.interface.flush();
+}
+
+/// Repos owned by the user are always included. Other repos are included only
+/// if their owner matches one of the patterns, or if there are no patterns.
+fn isOwnerIncluded(
+    include_orgs: ?[]const []const u8,
+    user: []const u8,
+    repo_name: []const u8,
+) bool {
+    const patterns = include_orgs orelse return true;
+    if (patterns.len == 0) return true;
+    const owner = repo_name[0 .. std.mem.indexOfScalar(u8, repo_name, '/') orelse
+        repo_name.len];
+    return std.ascii.eqlIgnoreCase(owner, user) or glob.matchAny(patterns, owner);
+}
+
+test isOwnerIncluded {
+    const testing = std.testing;
+    const orgs: []const []const u8 = &.{ "good-org", "team-*" };
+
+    try testing.expect(isOwnerIncluded(null, "me", "other/repo"));
+    try testing.expect(isOwnerIncluded(&.{}, "me", "other/repo"));
+    try testing.expect(isOwnerIncluded(orgs, "me", "Me/repo"));
+    try testing.expect(isOwnerIncluded(orgs, "me", "Good-Org/repo"));
+    try testing.expect(isOwnerIncluded(orgs, "me", "team-a/repo"));
+    try testing.expect(!isOwnerIncluded(orgs, "me", "other/repo"));
+    try testing.expect(!isOwnerIncluded(orgs, "me", "good-org-fake/repo"));
 }
 
 fn splitList(

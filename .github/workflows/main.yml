@@ -42,8 +42,10 @@ jobs:
         ./zig-out/bin/github-stats
       env:
         ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        EXCLUDE_REPOS: ${{ secrets.EXCLUDE_REPOS }}
-        EXCLUDE_LANGS: ${{ secrets.EXCLUDE_LANGS }}
+        # Variables are not masked in logs; put private repo names in the secret
+        EXCLUDE_REPOS: ${{ secrets.EXCLUDE_REPOS }} ${{ vars.EXCLUDE_REPOS }}
+        INCLUDE_ORGS: ${{ vars.INCLUDE_ORGS }}
+        EXCLUDE_LANGS: ${{ secrets.EXCLUDE_LANGS || secrets.EXCLUDED_LANGS }}
         EXCLUDE_PRIVATE: "false"
         SILENT: "true"
         # TODO: Remove this when they get their API working again
