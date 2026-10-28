@@ -45,7 +45,7 @@ jobs:
         # Variables are not masked in logs; put private repo names in the secret
         EXCLUDE_REPOS: ${{ secrets.EXCLUDE_REPOS }} ${{ vars.EXCLUDE_REPOS }}
         INCLUDE_ORGS: ${{ vars.INCLUDE_ORGS }}
-        EXCLUDE_LANGS: ${{ secrets.EXCLUDE_LANGS || secrets.EXCLUDED_LANGS }}
+        EXCLUDE_LANGS: ${{ vars.EXCLUDE_LANGS }}
         EXCLUDE_PRIVATE: "false"
         SILENT: "true"
         # TODO: Remove this when they get their API working again
